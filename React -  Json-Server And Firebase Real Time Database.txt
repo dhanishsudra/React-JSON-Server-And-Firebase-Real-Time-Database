@@ -1,0 +1,447 @@
+			React – JSON-server and Firebase Real Time Database
+
+Q.1  What do you mean by RESTful web services? 
+->  REST stands for Representational State Transfer.
+->  RESTful web services are web APIs (Application Programming Interfaces) that follow the REST architecture style to allow communication between client like React app, mobile app and server.
+-> They use HTTP methods GET, POST, PUT, DELETE, etc. To perform operations on resources.
+
+
+Q.2 What is Json-Server? How we use in React?
+-> JSON-Server is a simple tool that lets you create a mock REST API quickly.
+-> It uses a simple db.json file as a database.
+-> It automatically creates RESTful routes for your data.
+
+
+Q.3 How do you fetch data from a Json-server API in React? Explain the role of fetch() or axios() in making API requests.
+-> JSON-Server exposes REST APIs. You can consume these APIs in React using fetch() or axios() inside a component, usually within useEffect so that the request runs when the component mounts.
+
+
+>> Example Using Fetch :
+
+import React, { useEffect, useState } from "react";
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:3001/users") // API from JSON-Server
+      .then((response) => response.json()) // Convert response to JSON
+      .then((data) => setUsers(data))      // Update state
+      .catch((error) => console.error("Error:", error));
+  }, []);
+
+  return (
+    <div>
+      <h2>User List</h2>
+      <ul>
+        {users.map((u) => (
+          <li key={u.id}>
+            {u.name} - {u.age} years old
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default UserList;
+>> Fetch() sends a GET request to the JSON-Server.
+>> json() converts the response body into JavaScript object.
+>> setUsers data stores it in React state to triggers re-render in UI updates.
+
+>> Example using axios
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:3001/users") // API call
+      .then((response) => setUsers(response.data)) // response.data holds JSON
+      .catch((error) => console.error("Error:", error));
+  }, []);
+
+  return (
+    <div>
+      <h2>User List</h2>
+      <ul>
+        {users.map((u) => (
+          <li key={u.id}>
+            {u.name} - {u.age} years old
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default UserList;
+
+Q.4 What is Firebase? What features does Firebase offer?
+-> Firebase is a Backend-as-a-Service platform developed by Google.
+-> It provides ready-to-use backend services (databases, authentication, hosting, cloud functions, etc.), so developers can focus on building apps without managing servers.
+-> It is widely used in web apps, mobile apps.
+
+> Features of Firebase:
+-> Firebase Authentication, Provides user login/signup with: Email & Password Phone number, Social logins (Google, Facebook, GitHub, etc.)
+
+-> Realtime Database (older version of Firestore) JSON-based database with real-time syncing.Good for apps that need instant updates.
+
+-> Firebase Hosting Host static web apps (React, Angular, Vue, HTML/CSS/JS).Free SSL (HTTPS) included. Fast global CDN.
+
+
+Q.5 Discuss the importance of handling errors and loading states when working with APIs in React
+-> When our React app fetches data from an API (like JSON-Server, Firebase, or a REST API), three things can happen:
+  1. Loading -> while waiting for the response
+  2. Success -> Data comes back successfully.
+  3. Error -> Something goes wrong bad network, wrong endpoint, server down, etc.
+
+> Handling Errors:
+  -> Problem: If the API fails, without error handling the app crashes or stays empty.
+  -> Solutions: Catch errors and show a user-friendly message.
+
+> Handling Loading States:
+  -> Problem: Without a loading state, the UI may look broken while data is being fetched 
+  -> Solution: Show a loading spinner, skeleton, or message.
+
+>> PRACTICAL <<
+Task - 1: Create a React component that fetches data from a public API (e.g., a list of users)and displays it in a table format.
+
+-> import React, { useEffect, useState } from "react";
+
+function UserTable() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Fetch users from public API
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch("https://jsonplaceholder.typicode.com/users");
+        if (!response.ok) {
+          throw new Error("Failed to fetch users");
+        }
+        const data = await response.json();
+        setUsers(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  if (loading) return <p>Loading users...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>User List</h2>
+      <table border="1" cellPadding="10" style={{ borderCollapse: "collapse", width: "100%" }}>
+        <thead>
+          <tr style={{ background: "#f2f2f2" }}>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>City</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((u) => (
+            <tr key={u.id}>
+              <td>{u.id}</td>
+              <td>{u.name}</td>
+              <td>{u.email}</td>
+              <td>{u.address.city}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default UserTable;
+
+
+>> Create a React app with Json-server and use Get , Post , Put , Delete & patch method on
+Json-server API. 
+
+-> import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+const API_URL = "http://localhost:3001/users";
+
+function UserCRUD() {
+  const [users, setUsers] = useState([]);
+  const [form, setForm] = useState({ name: "", age: "", location: "" });
+
+  //  GET Users
+  const fetchUsers = async () => {
+    const res = await axios.get(API_URL);
+    setUsers(res.data);
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  //  Handle input change
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  //  POST (Add User)
+  const addUser = async () => {
+    if (!form.name || !form.age || !form.location) return;
+    await axios.post(API_URL, form);
+    setForm({ name: "", age: "", location: "" });
+    fetchUsers();
+  };
+
+  //  PUT (Update User - replace entire object)
+  const updateUser = async (id) => {
+    const updatedUser = { name: "Updated Name", age: 30, location: "UK" };
+    await axios.put(`${API_URL}/${id}`, updatedUser);
+    fetchUsers();
+  };
+
+  //  PATCH (Update only one field)
+  const patchUser = async (id) => {
+    await axios.patch(`${API_URL}/${id}`, { location: "Canada" });
+    fetchUsers();
+  };
+
+  //  DELETE User
+  const deleteUser = async (id) => {
+    await axios.delete(`${API_URL}/${id}`);
+    fetchUsers();
+  };
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>React + JSON-Server CRUD</h2>
+
+      {/* Form */}
+      <input
+        type="text"
+        name="name"
+        placeholder="Name"
+        value={form.name}
+        onChange={handleChange}
+      />
+      <input
+        type="number"
+        name="age"
+        placeholder="Age"
+        value={form.age}
+        onChange={handleChange}
+      />
+      <input
+        type="text"
+        name="location"
+        placeholder="Location"
+        value={form.location}
+        onChange={handleChange}
+      />
+      <button onClick={addUser}>Add User</button>
+
+      {/* Table */}
+      <table border="1" cellPadding="10" style={{ marginTop: "20px", width: "100%" }}>
+        <thead>
+          <tr style={{ background: "#f2f2f2" }}>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Location</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((u) => (
+            <tr key={u.id}>
+              <td>{u.id}</td>
+              <td>{u.name}</td>
+              <td>{u.age}</td>
+              <td>{u.location}</td>
+              <td>
+                <button onClick={() => updateUser(u.id)}>PUT Update</button>
+                <button onClick={() => patchUser(u.id)}>PATCH Location</button>
+                <button onClick={() => deleteUser(u.id)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default UserCRUD;
+
+
+Task - 2 : Create a React app crud and Authentication with firebase API 
+
+-> first setup firebase: npm i firebase
+-> then, configure firebase in react
+
+// src/firebase.js
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
+// Replace these with your Firebase project settings
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_APP.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_APP.appspot.com",
+  messagingSenderId: "YOUR_MSG_SENDER_ID",
+  appId: "YOUR_APP_ID",
+};
+
+const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+
+
+// Auth.jsx
+
+import React, { useState } from "react";
+import { auth } from "./firebase";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
+
+function Auth() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [user, setUser] = useState(null);
+
+  //  Sign Up
+  const handleSignup = async () => {
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      setUser(userCred.user);
+      alert("User registered!");
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  //  Login
+  const handleLogin = async () => {
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      setUser(userCred.user);
+      alert("Login successful!");
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  //  Logout
+  const handleLogout = async () => {
+    await signOut(auth);
+    setUser(null);
+  };
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>Firebase Authentication</h2>
+      {user ? (
+        <div>
+          <p>Welcome, {user.email}</p>
+          <button onClick={handleLogout}>Logout</button>
+        </div>
+      ) : (
+        <>
+          <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+          <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+          <button onClick={handleSignup}>Sign Up</button>
+          <button onClick={handleLogin}>Login</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default Auth;
+
+
+Task - 3: Implement error handling and loading states for the API call. Display a loading spinner while the data is being fetched.
+-> import React, { useEffect, useState } from "react";
+
+function UserTable() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true); // start loading
+        const response = await fetch("https://jsonplaceholder.typicode.com/users");
+        if (!response.ok) {
+          throw new Error("Failed to fetch users");
+        }
+        const data = await response.json();
+        setUsers(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false); // stop loading in both success & error
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  //  Loading state → spinner
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "20px" }}>
+        <div className="spinner"></div>
+        <p>Loading users...</p>
+      </div>
+    );
+  }
+
+  //  Error state
+  if (error) {
+    return <p style={{ color: "red" }}>{error}</p>;
+  }
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>User List</h2>
+      <table border="1" cellPadding="10" style={{ borderCollapse: "collapse", width: "100%" }}>
+        <thead>
+          <tr style={{ background: "#f2f2f2" }}>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>City</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((u) => (
+            <tr key={u.id}>
+              <td>{u.id}</td>
+              <td>{u.name}</td>
+              <td>{u.email}</td>
+              <td>{u.address.city}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default UserTable;
